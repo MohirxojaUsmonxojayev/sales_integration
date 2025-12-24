@@ -1,0 +1,25 @@
+# Maxfiy Environment fayllari (ENG MUHIMI)
+.env
+.env.*
+*.env
+
+# 2. LEKIN .env.example faylini inkor et (GitHubga yuklansin)
+!.env.example
+
+# Python kesh fayllari (GitHubga kerak emas)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Loglar (Serverda qolishi kerak)
+logs/
+*.log
+
+# Virtual muhit (Har kim o'zida yaratadi)
+.venv/
+venv/
+env/
+
+# IDE sozlamalari (Pycharm, VSCode)
+.idea/
+.vscode/
