@@ -10,10 +10,14 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # Loglar (Serverda qolishi kerak)
 logs/
 *.log
+
+backups/*.zip
+temp_extract/
 
 # Virtual muhit (Har kim o'zida yaratadi)
 .venv/
