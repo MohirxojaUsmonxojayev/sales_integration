@@ -3,12 +3,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from typing import List
-
-from core.config import settings
-from core.logger import logger
-# MANA BU YERDA IMPORT QILISH KERAK:
-from utils.translator import LogTranslator
-
+from sales_integration.core.config import settings
+from sales_integration.core.logger import logger
 
 class MailService:
     def __init__(self):
@@ -20,30 +16,25 @@ class MailService:
 
     def send_report(self, subject: str, body: str, logs: List[str] = None):
         """
-        Email yuborish va loglarni tarjima qilish.
+        Email yuborish servisi.
         """
-        # LogTranslator yordamida tarjima qilamiz
-        russian_subject = LogTranslator.translate(subject)
-        russian_body = LogTranslator.translate(body)
 
-        report_label = "ОТЧЕТ ОТ" if settings.APP_LANGUAGE == "RUS" else "HISOBOT VAQTI"
-        full_content = f"{report_label}: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        full_content = f"ОТЧЕТ ОТ: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         full_content += "=" * 40 + "\n"
-        full_content += f"СТАТУС: {russian_body}\n"
+        full_content += f"СТАТУС: {body}\n"
         full_content += "=" * 40 + "\n\n"
 
         if logs:
             full_content += "ПОДРОБНЫЕ ЛОГИ:\n"
-            # Har bir log qatorini tarjima qilamiz
             for line in logs:
-                full_content += LogTranslator.translate(line) + "\n"
+                full_content += line + "\n"
 
         for recipient in self.recipients:
             try:
                 msg = MIMEMultipart()
                 msg['From'] = self.sender
                 msg['To'] = recipient
-                msg['Subject'] = russian_subject
+                msg['Subject'] = subject  # To'g'ridan-to'g'ri mavzu qo'yiladi
                 msg.attach(MIMEText(full_content, 'plain', 'utf-8'))
 
                 with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
@@ -51,10 +42,10 @@ class MailService:
                     server.login(self.sender, self.password)
                     server.send_message(msg)
 
-                logger.info(f"Email muvaffaqiyatli yuborildi: {recipient}")
+                logger.info(f"Email успешно отправлен: {recipient}")
             except Exception as e:
-                logger.error(f"Email yuborishda xatolik ({recipient}): {e}")
+                logger.error(f"Ошибка при отправке Email ({recipient}): {e}")
 
 
-# Singleton instance
+# Singleton
 mail_service = MailService()

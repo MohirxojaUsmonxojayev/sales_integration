@@ -3,8 +3,8 @@ import os
 import socket
 import time
 from typing import List
-from core.config import settings
-from core.logger import logger
+from sales_integration.core.config import settings
+from sales_integration.core.logger import logger
 
 
 class SFTPManager:
@@ -26,7 +26,7 @@ class SFTPManager:
     def _connect(self):
         """SSH va SFTP sessiyasini ochadi."""
         try:
-            logger.info(f"SFTP serverga ulanish o'rnatilmoqda: {self.host}")
+            logger.info(f"Установка соединения с SFTP-сервером: {self.host}")
             self.ssh = paramiko.SSHClient()
             self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -42,13 +42,13 @@ class SFTPManager:
                 compress=True
             )
             self.sftp = self.ssh.open_sftp()
-            logger.info("SFTP ulanish muvaffaqiyatli o'rnatildi.")
+            logger.info("SFTP-соединение успешно установлено.")
 
         except paramiko.AuthenticationException:
-            logger.error("SFTP autentifikatsiya xatosi: Login yoki parol noto'g'ri.")
+            logger.error("Ошибка аутентификации SFTP: Неверный логин или пароль.")
             raise
         except Exception as e:
-            logger.error(f"SFTP ulanishda xatolik yuz berdi: {e}")
+            logger.error(f"Ошибка при подключении к SFTP: {e}")
             raise
 
     def _close(self):
@@ -57,14 +57,14 @@ class SFTPManager:
             self.sftp.close()
         if self.ssh:
             self.ssh.close()
-        logger.info("SFTP ulanishlari yopildi.")
+        logger.info("Соединения SFTP закрыты.")
 
     def upload_files(self, file_paths: List[str]) -> bool:
         """
         Berilgan fayllar ro'yxatini SFTP serverga yuklaydi.
         """
         if not file_paths:
-            logger.warning("Yuklash uchun fayllar topilmadi.")
+            logger.warning("Файлы для загрузки не найдены.")
             return False
 
         attempt = 0
@@ -79,23 +79,23 @@ class SFTPManager:
                     file_name = os.path.basename(local_path)
                     remote_full_path = f"{self.remote_path}/{file_name}"
 
-                    logger.info(f"Fayl yuborilmoqda: {file_name}")
+                    logger.info(f"Отправка файла: {file_name}")
                     self.sftp.put(local_path, remote_full_path)
                     uploaded_count += 1
-                    logger.info(f"✅ Muvaffaqiyatli yuborildi: {file_name}")
+                    logger.info(f"✅ Успешно отправлен: {file_name}")
 
                 if uploaded_count == len(file_paths):
-                    logger.info(f"SUCCESS: Barcha {uploaded_count} ta fayl SFTPga yuklandi.")
+                    logger.info(f"SUCCESS: Все {uploaded_count} файлов загружены на SFTP.")
                     return True
 
             except (socket.error, paramiko.SSHException, EOFError) as e:
                 attempt += 1
-                logger.warning(f"Ulanish xatosi (Urinish {attempt}/{max_attempts}): {e}")
+                logger.warning(f"Ошибка соединения (Попытка {attempt}/{max_attempts}): {e}")
                 time.sleep(15)
             finally:
                 self._close()
 
-        logger.error("ERROR: SFTPga fayllarni yuklash imkoni bo'lmadi.")
+        logger.error("ERROR: Не удалось загрузить файлы на SFTP.")
         return False
 
 

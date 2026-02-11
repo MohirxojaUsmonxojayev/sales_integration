@@ -1,8 +1,7 @@
 import os
 import json
 import xml.etree.ElementTree as ET
-from core.logger import logger
-from core.config import settings
+from sales_integration.core.logger import logger
 
 
 class XMLTransformer:
@@ -18,39 +17,30 @@ class XMLTransformer:
     def _load_mappings(self) -> dict:
         """JSON fayldan ID lar lug'atini yuklaydi."""
         if not os.path.exists(self.mapping_file):
-            logger.warning(f"Mapping fayli topilmadi: {self.mapping_file}")
+            logger.warning(f"Файл маппинга не найден: {self.mapping_file}")
             return {}
 
         try:
             with open(self.mapping_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                logger.info(f"Mapping yuklandi: {len(data)} ta qoida.")
+                logger.info(f"Маппинг загружен: {len(data)} правил.")
                 return data
         except Exception as e:
-            logger.error(f"Mapping faylini o'qishda xato: {e}")
+            logger.error(f"Ошибка при чтении файла маппинга: {e}")
             return {}
 
     def process_outlets(self, file_path: str) -> bool:
-        """
-        Outlets.xml faylidagi AREA_ID larni almashtiradi.
-        Matnni replace qilish o'rniga, XML daraxti (Tree) bilan ishlaydi (Xavfsiz usul).
-        """
         if not self.mappings:
             return False
 
         try:
-            logger.info(f"Outlets.xml tahlil qilinmoqda: {file_path}")
+            logger.info(f"Анализ Outlets.xml: {file_path}")
 
             # XML ni o'qish
             tree = ET.parse(file_path)
             root = tree.getroot()
 
             changes_count = 0
-
-            # Har bir Outlet tegini qidiramiz (yoki kerakli tegni)
-            # Agar XML strukturasi murakkab bo'lsa, './/Outlet' yoki shunga o'xshash yo'l kerak
-            # Borjomi faylida aniq teg ko'rsatilmagan, umumiy replace qilingan.
-            # Lekin Senior sifatida biz barcha elementlarning atributlarini tekshiramiz:
 
             for elem in root.iter():
                 current_id = elem.get('AREA_ID')
@@ -61,17 +51,17 @@ class XMLTransformer:
 
             if changes_count > 0:
                 tree.write(file_path, encoding='utf-8', xml_declaration=True)
-                logger.info(f"✅ {changes_count} ta AREA_ID muvaffaqiyatli almashtirildi.")
+                logger.info(f"✅ Успешно заменено {changes_count} AREA_ID.")
                 return True
             else:
-                logger.info("ℹ️ O'zgartirish kerak bo'lgan AREA_ID lar topilmadi.")
+                logger.info("ℹ️ AREA_ID для замены не найдены.")
                 return False
 
         except ET.ParseError:
-            logger.error("XML faylni o'qishda xatolik (buzilgan format).")
+            logger.error("Ошибка чтения XML-файла (поврежденный формат).")
             return False
         except Exception as e:
-            logger.error(f"XML transformatsiyasida xato: {e}")
+            logger.error(f"Ошибка трансформации XML: {e}")
             return False
 
 

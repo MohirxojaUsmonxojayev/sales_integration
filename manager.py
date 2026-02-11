@@ -3,11 +3,10 @@ import os
 import sys
 from datetime import datetime
 
-# Qaysi kompaniyalar uchun ishlatmoqchisan?
-# Bu yerda .env fayllarining nomini yozamiz
 CLIENTS = [
     {"name": "SAYONAR", "env_file": ".env.sayonar"},
     {"name": "BORJOMI", "env_file": ".env.borjomi"},
+    {"name": "ROYALSTAR", "env_file": ".env.royalstar"},
 ]
 
 
@@ -20,41 +19,38 @@ def run_client(client):
     env_file = client["env_file"]
 
     if not os.path.exists(env_file):
-        log(f"❌ XATOLIK: {name} uchun {env_file} fayli topilmadi!")
+        log(f"❌ ОШИБКА: Файл {env_file} для {name} не найден!")
         return
 
-    log(f"🚀 {name} jarayoni boshlanmoqda... (Config: {env_file})")
+    log(f"🚀 Запуск процесса {name}... (Config: {env_file})")
 
     # Hozirgi muhit o'zgaruvchilarini nusxalab olamiz
     env = os.environ.copy()
     # Biz config.py ga qaysi faylni o'qish kerakligini aytamiz
     env["ENV_FILE_PATH"] = env_file
 
-    # main.py ni alohida jarayon sifatida ishga tushiramiz
-    # Bu xuddi terminalda qo'lda yozgandek gap
     try:
-        # python main.py
         result = subprocess.run(
             [sys.executable, "main.py"],
             env=env,
             check=True,
             text=True
         )
-        log(f"✅ {name} jarayoni muvaffaqiyatli tugadi.")
+        log(f"✅ Процесс {name} успешно завершен.")
     except subprocess.CalledProcessError as e:
-        log(f"⚠️ {name} jarayonida xatolik yuz berdi. Kod: {e.returncode}")
+        log(f"⚠️ Ошибка в процессе {name}. Cod: {e.returncode}")
     except Exception as e:
-        log(f"❌ {name} ishga tushmadi: {e}")
+        log(f"❌ {name} не запустился: {e}")
 
 
 def main():
-    log("=== BARCHA MIJOZLAR UCHUN INTEGRATSIYA BOSHLANDI ===")
+    log("=== ЗАПУСК ИНТЕГРАЦИИ ДЛЯ ВСЕХ КЛИЕНТОВ ===")
 
     for client in CLIENTS:
         run_client(client)
         log("-" * 40)
 
-    log("=== BARCHA ISHLAR YAKUNLANDI ===")
+    log("=== ВСЕ ЗАДАЧИ ЗАВЕРШЕНЫ ===")
 
 
 if __name__ == "__main__":

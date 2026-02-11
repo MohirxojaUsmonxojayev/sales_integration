@@ -3,13 +3,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 class Settings(BaseSettings):
-    # ... (Eski Smartup, SFTP, Email sozlamalari shu yerda turadi) ...
+    COMPANY_NAME: str = "Company"  # Agar .env da bo'lmasa, default "Company" bo'ladi
     SMARTUP_SERVER_URL: str
     SMARTUP_CLIENT_ID: str
     SMARTUP_CLIENT_SECRET: str
     COMPANY_ID: int
     FILIAL_ID: int
-    TEMPLATE_ID: int
+    TEMPLATE_ID: str
+    PROTOCOL: str = "SFTP"
+
 
     SFTP_SERVER: str
     SFTP_PORT: int
@@ -27,18 +29,26 @@ class Settings(BaseSettings):
     DAYS_DIFF: int = 90
     LOG_LEVEL: str = "INFO"
 
-    # === YANGI QO'SHILGAN SOZLAMALAR ===
     ENABLE_XML_TRANSFORMATION: bool = False
-    APP_LANGUAGE: str = "RUS"  # Default holatda Rus tili
 
     @property
     def recipient_list(self) -> List[str]:
         return [email.strip() for email in self.EMAIL_RECIPIENTS.split(",")]
 
-    # CONFIG O'ZGARISHI:
+    @property
+    def get_template_ids(self) -> List[int]:
+
+        if not self.TEMPLATE_ID:
+            return []
+
+        try:
+            return [int(x.strip()) for x in str(self.TEMPLATE_ID).split(",")]
+        except ValueError:
+            # Agar kutilmagan belgi bo'lsa
+            return []
+
+
     model_config = SettingsConfigDict(
-        # Atrof-muhit o'zgaruvchisidan fayl nomini oladi,
-        # topa olmasa standart .env ni ishlatadi.
         env_file=os.getenv("ENV_FILE_PATH", ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
