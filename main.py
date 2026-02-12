@@ -100,14 +100,6 @@ def run_integration():
             success_msg = f"SUCCESS - Все процессы для {settings.COMPANY_NAME} завершены успешно"
             custom_log(success_msg)
 
-            custom_log("🗑️ Успешно завершено. Очистка файлов бэкапа...")
-            for b_file in session_backup_files:
-                try:
-                    if os.path.exists(b_file):
-                        os.remove(b_file)
-                        logger.info(f"Бэкап удален: {os.path.basename(b_file)}")
-                except Exception as del_err:
-                    logger.warning(f"Ошибка при удалении бэкапа: {del_err}")
             # ====================================================
 
             subject = f"✅ {settings.COMPANY_NAME} - Все процессы завершены успешно"
@@ -132,8 +124,20 @@ def run_integration():
         sys.exit(1)
 
     finally:
+        custom_log("🧹 Выполняется очистка...")
+
         # Temp (XML) fayllarni har doim tozalaymiz
         file_handler.cleanup_temp()
+
+        if session_backup_files:
+            custom_log(f"🗑️ Удаление файлов резервных копий ({len(session_backup_files)} шт.)...")
+            for b_file in session_backup_files:
+                try:
+                    if os.path.exists(b_file):
+                        os.remove(b_file)
+                except Exception as del_err:
+                    logger.warning(f"Ошибка при удалении бэкапа: {del_err}")
+
         custom_log("Процесс завершен.")
 
 if __name__ == "__main__":

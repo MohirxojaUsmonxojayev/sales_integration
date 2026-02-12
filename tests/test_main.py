@@ -26,12 +26,13 @@ class TestMainIntegration(unittest.TestCase):
     @patch('main.smartup_client')
     @patch('main.file_handler')
     @patch('main.sftp_manager')
-    @patch('main.ftp_manager')
+    @patch('main.ftp_manager') # 5-patch
     @patch('main.mail_service')
     @patch('main.xml_transformer')
-    def test_run_integration_success(self, mock_transformer, mock_mail, mock_sftp, mock_file_handler,
+    def test_run_integration_success(self, mock_transformer, mock_mail, mock_ftp, mock_sftp, mock_file_handler,
                                      mock_smartup, mock_settings):
         """HAPPY PATH: Hamma narsa muvaffaqiyatli o'tganda."""
+        # E'tibor bering: mock_ftp argumenti qo'shildi ^^^
 
         # 1. Sozlamalar
         mock_settings.COMPANY_NAME = "TestCompany"
@@ -50,22 +51,20 @@ class TestMainIntegration(unittest.TestCase):
             run_integration()
 
             # --- TEKSHIRUVLAR ---
-            self.assertEqual(mock_smartup.download_sales_report.call_count, 2)
+            # Har bir template uchun o'chirish chaqiriladi (jami 2 ta)
+            self.assertEqual(mock_remove.call_count, 2)
             mock_sftp.upload_files.assert_called()
             mock_mail.send_report.assert_called()
 
             # Argumentlarni tekshirish
             args, kwargs = mock_mail.send_report.call_args
 
-            # Agar subject pozitsiyali (args[0]) bo'lsa uni olamiz,
-            # yo'qsa keyword (kwargs['subject']) dan olamiz.
             if args:
                 subject = args[0]
             else:
                 subject = kwargs.get('subject', '')
 
             self.assertIn("Все процессы завершены успешно", subject)
-            self.assertEqual(mock_remove.call_count, 2)
 
             print("✅ Main Integration (Success) testi o'tdi.")
 
@@ -90,7 +89,6 @@ class TestMainIntegration(unittest.TestCase):
 
         mock_mail.send_report.assert_called()
 
-        # Argumentlarni tekshirish
         args, kwargs = mock_mail.send_report.call_args
         if args:
             subject = args[0]
